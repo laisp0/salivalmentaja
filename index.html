@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Salivalmentaja</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#14161a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Salivalmentaja">
+<style>
+  :root{--bg:#14161a;--card:#1e2127;--line:#2c3038;--txt:#e9eaec;--mut:#9097a3;--acc:#f2a33a;--ok:#4cc38a;--err:#ef5b5b}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  body{padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px)}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  h1{font-size:20px;margin:0}
+  h2{font-size:17px;margin:20px 0 8px}
+  button{font:inherit;color:inherit;cursor:pointer}
+  .ikoni{background:none;border:0;font-size:22px;padding:6px 8px;color:var(--mut)}
+  .linkki{background:none;border:0;color:var(--acc);padding:6px 0;font-weight:600}
+  .iso{display:block;width:100%;padding:28px 20px;margin:0 0 14px;border-radius:16px;border:1px solid var(--line);background:var(--card);text-align:left;font-size:20px;font-weight:650}
+  .iso small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+  label{display:block;font-size:14px;color:var(--mut);margin:12px 0 4px}
+  input,select{font:inherit;color:var(--txt);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;width:100%}
+  input[type=checkbox]{width:24px;height:24px;accent-color:var(--acc)}
+  .sarjat{width:100%;border-collapse:collapse;margin-top:8px}
+  .sarjat th{font-size:13px;font-weight:500;color:var(--mut);text-align:left;padding:4px}
+  .sarjat td{padding:4px;vertical-align:middle}
+  .sarjat td:first-child{width:28px;color:var(--mut);text-align:center}
+  .sarjat input[type=number]{padding:12px 8px;text-align:center}
+  .poista{background:none;border:0;color:var(--mut);font-size:20px;padding:6px}
+  .rivi{display:flex;gap:10px;margin-top:14px}
+  .rivi button{flex:1;padding:16px;border-radius:12px;font-weight:650;border:1px solid var(--line);background:var(--card)}
+  .rivi .paa{background:var(--acc);color:#1b1205;border-color:var(--acc)}
+  .rivi button:disabled{opacity:.5}
+  .tila{margin:12px 0 0;padding:10px 12px;border-radius:10px;font-size:15px}
+  .tila.ok{background:#173528;color:var(--ok)}
+  .tila.err{background:#3a1c1c;color:var(--err)}
+  .tila.info{background:var(--card);color:var(--mut)}
+  .kortti{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0}
+  .kortti b{display:block;margin-bottom:2px}
+  .mut{color:var(--mut);font-size:14px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <button id="takaisin" class="linkki" hidden>← Valikko</button>
+  <h1 id="otsikko">💪 Salivalmentaja</h1>
+  <button id="asetukset-nappi" class="ikoni" aria-label="Asetukset">⚙︎</button>
+</header>
+
+<!-- VALIKKO -->
+<section id="valikko">
+  <button class="iso" data-nav="kirjaa">✍️ Kirjaa sarjoja<small>Syötä sarja tai useampi heti tekemisen jälkeen</small></button>
+  <button class="iso" data-nav="dashboard">📈 Dashboard<small>Kehitys, tavoitteet ja suositukset</small></button>
+  <p id="valikko-tila" class="mut"></p>
+</section>
+
+<!-- KIRJAUS -->
+<section id="kirjaa" hidden>
+  <label for="pvm">Päivä</label>
+  <input id="pvm" type="date">
+
+  <label for="liike">Liike</label>
+  <select id="liike"></select>
+  <div id="uusi-wrap" hidden>
+    <label for="uusi">Uuden liikkeen nimi</label>
+    <input id="uusi" type="text" autocomplete="off">
+  </div>
+
+  <label for="variaatio">Variaatio (valinnainen)</label>
+  <input id="variaatio" type="text" placeholder="esim. vyö, jalat ylhäällä" autocomplete="off">
+
+  <div id="viimeksi"></div>
+
+  <table class="sarjat">
+    <thead><tr><th>#</th><th>Toistot</th><th>Paino kg</th><th>Lämpö</th><th></th></tr></thead>
+    <tbody id="rivit"></tbody>
+  </table>
+
+  <div class="rivi">
+    <button id="lisaa">+ Sarja</button>
+    <button id="tallenna" class="paa">Tallenna</button>
+  </div>
+  <p id="kirjaus-tila" class="tila" hidden></p>
+
+  <h2 id="paiva-otsikko">Päivän sarjat</h2>
+  <div id="paiva"></div>
+</section>
+
+<!-- DASHBOARD (siirretään seuraavassa vaiheessa) -->
+<section id="dashboard" hidden>
+  <div class="kortti"><b>Tulossa seuraavaksi</b><span class="mut">Dashboard siirretään tähän, kun kirjaus on testattu.</span></div>
+</section>
+
+<!-- ASETUKSET -->
+<section id="asetukset" hidden>
+  <p class="mut">Nämä tallentuvat vain tähän laitteeseen.</p>
+  <label for="a-url">Apps Script -osoite (/exec)</label>
+  <input id="a-url" type="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec">
+  <label for="a-token">Avain (TOKEN)</label>
+  <input id="a-token" type="password" autocomplete="off">
+  <div class="rivi"><button id="a-tallenna" class="paa">Tallenna ja testaa</button></div>
+  <p id="asetus-tila" class="tila" hidden></p>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
