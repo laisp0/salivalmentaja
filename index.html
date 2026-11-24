@@ -45,6 +45,7 @@
   .kortti{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0}
   .kortti b{display:block;margin-bottom:2px}
   .mut{color:var(--mut);font-size:14px}
+  .jono{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px}
   [hidden]{display:none!important}
 </style>
 </head>
@@ -56,6 +57,11 @@
 </header>
 
 <!-- VALIKKO -->
+<div id="jono-tila" class="tila info jono" hidden>
+  <span id="jono-teksti"></span>
+  <button id="jono-laheta" class="linkki">Lähetä nyt</button>
+</div>
+
 <section id="valikko">
   <button class="iso" data-nav="kirjaa">✍️ Kirjaa sarjoja<small>Syötä sarja tai useampi heti tekemisen jälkeen</small></button>
   <button class="iso" data-nav="dashboard">📈 Dashboard<small>Kehitys, tavoitteet ja suositukset</small></button>

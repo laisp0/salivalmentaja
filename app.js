@@ -7,6 +7,7 @@ const UUSI = '__uusi';
 
 let data = { sarjat: [], liikkeet: [] };   // sarjat: {pvm,liike,variaatio,sarja,toistot,paino,lampo,...}
 let nakyma = '';
+let latausVirhe = '';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -61,6 +62,7 @@ async function api(action, extra = {}) {
 
 async function lataa() {
   const j = await api('lue');
+  latausVirhe = '';
   data = { sarjat: parseSarjat(j.sarjat), liikkeet: parseLiikkeet(j.liikkeet) };
   try { localStorage.setItem(LS.cache, JSON.stringify({ t: Date.now(), sarjat: j.sarjat, liikkeet: j.liikkeet })); } catch (e) {}
   return data;
@@ -77,15 +79,50 @@ function lataaValimuisti() {
 const jono = () => JSON.parse(localStorage.getItem(LS.jono) || '[]');
 const asetaJono = j => localStorage.setItem(LS.jono, JSON.stringify(j));
 
+let lahettaa = false;
+let jonoVirhe = '';
 async function tyhjennaJono() {
-  let j = jono();
-  while (j.length) {
-    try { await api('lisaa', { rivit: j[0] }); }
-    catch (e) { if (e instanceof TypeError) break; console.warn('jonon erä hylätty', e); }
-    j = jono(); j.shift(); asetaJono(j);
+  if (lahettaa || !jono().length || !asetukset().token) return paivitaJonoTila();
+  lahettaa = true;
+  paivitaJonoTila();
+  let lahti = false;
+  try {
+    while (jono().length) {
+      const era = jono()[0];
+      try {
+        await api('lisaa', { rivit: era });
+        jonoVirhe = '';
+        lahti = true;
+      } catch (e) {
+        if (e instanceof TypeError) { jonoVirhe = 'Ei yhteyttä, yritetään uudelleen.'; break; }
+        // Palvelin hylkäsi erän (esim. virheellinen rivi): siirretään sivuun, ettei jono jumitu.
+        const hyl = JSON.parse(localStorage.getItem('sv_hylatyt') || '[]');
+        hyl.push({ era, virhe: e.message, t: Date.now() });
+        localStorage.setItem('sv_hylatyt', JSON.stringify(hyl));
+        jonoVirhe = 'Palvelin hylkäsi sarjoja: ' + e.message;
+      }
+      const j = jono(); j.shift(); asetaJono(j);
+    }
+  } finally {
+    lahettaa = false;
+    paivitaJonoTila();
+    if (lahti) lataa().then(() => { paivitaValikkoTila(); if (nakyma === 'kirjaa') { naytaPaiva(); numeroi(); } }).catch(() => {});
   }
-  paivitaValikkoTila();
 }
+
+function paivitaJonoTila() {
+  const n = jono().reduce((s, e) => s + e.length, 0);
+  const el = $('#jono-tila');
+  el.hidden = !n && !jonoVirhe;
+  $('#jono-teksti').textContent = lahettaa ? `Lähetetään ${n} sarjaa…`
+    : n ? `⏳ ${n} sarjaa odottaa lähetystä.${jonoVirhe ? ' ' + jonoVirhe : ''}` : jonoVirhe;
+  $('#jono-laheta').hidden = !n || lahettaa;
+  paivitaValikkoTila();
+  if (nakyma === 'kirjaa') naytaPaiva();
+}
+
+// Yritä uudelleen säännöllisesti niin kauan kuin jonossa on jotain.
+setInterval(() => { if (jono().length && document.visibilityState === 'visible') tyhjennaJono(); }, 20000);
 
 /* ---------- navigointi ---------- */
 const OTSIKOT = { '': '💪 Salivalmentaja', kirjaa: 'Kirjaa sarjoja', dashboard: 'Dashboard', asetukset: 'Asetukset' };
@@ -103,11 +140,10 @@ function nayta(n) {
 }
 
 function paivitaValikkoTila() {
-  const j = jono().reduce((s, e) => s + e.length, 0);
   const osat = [];
   if (!asetukset().token) osat.push('Aseta ensin osoite ja avain ⚙︎-valikosta.');
+  else if (latausVirhe) osat.push(latausVirhe);
   else osat.push(data.sarjat.length ? `${data.sarjat.length} sarjaa ladattu.` : 'Ladataan dataa…');
-  if (j) osat.push(`${j} sarjaa odottaa lähetystä.`);
   $('#valikko-tila').textContent = osat.join(' ');
 }
 
@@ -200,6 +236,17 @@ async function tallenna() {
 
   $('#tallenna').disabled = true;
   tila(el, 'info', 'Tallennetaan…');
+  if (jono().length) {
+    // Aiemmat jonossa olevat ensin, jotta järjestys säilyy.
+    await tyhjennaJono();
+    if (jono().length) {
+      asetaJono([...jono(), rivit]);
+      tila(el, 'info', `Ei yhteyttä – ${rivit.length} sarjaa jonossa, lähetetään automaattisesti.`);
+      nollaaRivit(syotteet[syotteet.length - 1]);
+      $('#tallenna').disabled = false;
+      return paivitaJonoTila();
+    }
+  }
   try {
     await api('lisaa', { rivit });
     for (const r of rivit) data.sarjat.push({ pvm, liike, variaatio, sarja: r[3], toistot: r[4], paino: r[5], lampo: r[6] === 'x' });
@@ -216,7 +263,7 @@ async function tallenna() {
     }
   } finally {
     $('#tallenna').disabled = false;
-    naytaPaiva();
+    paivitaJonoTila();
   }
 }
 function nollaaRivit(viim) {
@@ -260,7 +307,10 @@ function init() {
   $('#liike').onchange = () => { $('#uusi-wrap').hidden = $('#liike').value !== UUSI; numeroi(); naytaViimeksi(); };
   $('#uusi').oninput = () => { numeroi(); naytaViimeksi(); };
   $('#pvm').onchange = () => { numeroi(); naytaViimeksi(); naytaPaiva(); };
+  $('#jono-laheta').onclick = tyhjennaJono;
   window.addEventListener('online', tyhjennaJono);
+  window.addEventListener('focus', tyhjennaJono);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tyhjennaJono(); });
   window.addEventListener('hashchange', () => nayta(location.hash.slice(1)));
 
   lataaValimuisti();
@@ -270,7 +320,7 @@ function init() {
   if (!asetukset().token) { nayta('asetukset'); return; }
   lataa()
     .then(() => { paivitaValikkoTila(); if (nakyma === 'kirjaa') { taytaLiikkeet(); naytaViimeksi(); naytaPaiva(); numeroi(); } })
-    .catch(e => { $('#valikko-tila').textContent = 'Lataus epäonnistui: ' + (e instanceof TypeError ? 'ei yhteyttä (näytetään tallennettu data)' : e.message); })
+    .catch(e => { latausVirhe = 'Lataus epäonnistui: ' + (e instanceof TypeError ? 'ei yhteyttä (näytetään tallennettu data)' : e.message); paivitaValikkoTila(); })
     .finally(tyhjennaJono);
 }
 
