@@ -106,7 +106,7 @@ async function tyhjennaJono() {
   } finally {
     lahettaa = false;
     paivitaJonoTila();
-    if (lahti) lataa().then(() => { paivitaValikkoTila(); if (nakyma === 'kirjaa') { naytaPaiva(); numeroi(); } if (nakyma === 'dashboard') DB.piirra(); }).catch(() => {});
+    if (lahti) lataa().then(() => { paivitaValikkoTila(); if (nakyma === 'kirjaa') { naytaPaiva(); numeroi(); } if (nakyma === 'dashboard') piirraDashboard(); }).catch(() => {});
   }
 }
 
@@ -135,7 +135,7 @@ function nayta(n) {
   $('#otsikko').textContent = OTSIKOT[n] || OTSIKOT[''];
   if (location.hash.slice(1) !== n) history.replaceState(null, '', n ? '#' + n : location.pathname);
   if (n === 'kirjaa') { taytaLiikkeet(); naytaViimeksi(); naytaPaiva(); }
-  if (n === 'dashboard') DB.piirra();
+  if (n === 'dashboard') piirraDashboard();
   if (n === 'asetukset') { const a = asetukset(); $('#a-url').value = a.url; $('#a-token').value = a.token; }
   window.scrollTo(0, 0);
 }
@@ -146,6 +146,16 @@ function paivitaValikkoTila() {
   else if (latausVirhe) osat.push(latausVirhe);
   else osat.push(data.sarjat.length ? `${data.sarjat.length} sarjaa ladattu.` : 'Ladataan dataa…');
   $('#valikko-tila').textContent = osat.join(' ');
+}
+
+function piirraDashboard() {
+  const el = $('#dashboard');
+  if (typeof DB === 'undefined') {
+    el.innerHTML = '<p class="tila err">dashboard.js ei latautunut. Tarkista, että tiedosto on GitHubissa samassa kansiossa kuin index.html.</p>';
+    return;
+  }
+  try { DB.piirra(); }
+  catch (e) { console.error(e); el.innerHTML = `<p class="tila err">Dashboardin piirto epäonnistui: ${esc(e.message)}</p><p class="mut">${esc((e.stack || '').split('\n').slice(0, 3).join(' | '))}</p>`; }
 }
 
 /* ---------- kirjaus ---------- */
@@ -320,10 +330,11 @@ function init() {
 
   if (!asetukset().token) { nayta('asetukset'); return; }
   lataa()
-    .then(() => { paivitaValikkoTila(); if (nakyma === 'kirjaa') { taytaLiikkeet(); naytaViimeksi(); naytaPaiva(); numeroi(); } if (nakyma === 'dashboard') DB.piirra(); })
+    .then(() => { paivitaValikkoTila(); if (nakyma === 'kirjaa') { taytaLiikkeet(); naytaViimeksi(); naytaPaiva(); numeroi(); } if (nakyma === 'dashboard') piirraDashboard(); })
     .catch(e => { latausVirhe = 'Lataus epäonnistui: ' + (e instanceof TypeError ? 'ei yhteyttä (näytetään tallennettu data)' : e.message); paivitaValikkoTila(); })
     .finally(tyhjennaJono);
 }
 
+window.addEventListener('error', ev => { if (nakyma === 'dashboard' && !$('#dashboard').innerHTML.trim()) $('#dashboard').innerHTML = `<p class="tila err">Virhe: ${esc(ev.message)} (${esc((ev.filename || '').split('/').pop())}:${ev.lineno})</p>`; });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 init();
