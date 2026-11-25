@@ -1,6 +1,6 @@
 // Salivalmentaja service worker: verkko ensin, välimuisti varalla (offline-käyttö).
-const CACHE = 'salivalmentaja-v2';
-const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
+const CACHE = 'salivalmentaja-v3';
+const SHELL = ['./', 'index.html', 'app.js', 'dashboard.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

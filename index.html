@@ -46,6 +46,42 @@
   .kortti b{display:block;margin-bottom:2px}
   .mut{color:var(--mut);font-size:14px}
   .jono{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px}
+  #dashboard h2{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:24px 0 8px}
+  #dashboard h2 .mut{font-weight:400;font-size:13px}
+  #dashboard .kortti b{display:inline}
+  #dashboard svg{display:block;max-width:100%;font-family:inherit}
+  .paivitetty{margin:0 0 12px;text-align:right}
+  .osio-ots{font-size:13px;color:var(--mut);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+  .kaksi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .rengas{display:flex;flex-direction:column;align-items:center;text-align:center;margin:0;padding:14px 8px;border-radius:18px}
+  .rengas b{font-size:16px;margin-top:6px}
+  .pieni{font-size:14px;color:#B9BEC7;line-height:1.45}
+  .hyva{color:var(--ok)} .huono{color:var(--err)} .acc{color:var(--acc)}
+  .valmentaja{background:var(--acc);color:#1b1205;border-radius:18px;padding:16px;margin-top:16px;font-size:15px;line-height:1.45}
+  .valmentaja .yla{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+  .valmentaja .ots{font-size:20px;font-weight:800;margin:4px 0 6px;line-height:1.25}
+  .luvut{display:flex;gap:22px;font-size:14px;margin-bottom:10px}
+  .luvut span{display:block} .luvut b{font-size:22px}
+  .chipit{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+  .chip{font-size:14px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card)}
+  .chip.paalla{background:var(--acc);border-color:var(--acc);color:#1b1205;font-weight:600}
+  .selite{margin:-4px 0 8px}
+  .rivi-ots{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .rivi-ots b{font-size:17px}
+  .pill{display:inline-block;background:#22262C;border-radius:8px;padding:6px 10px;font-size:14px;font-weight:600;margin-top:4px}
+  .pill.nosta{background:#2A2215;color:var(--acc)}
+  .suos{font-size:15px;line-height:1.4}
+  .ryhmat{display:flex;flex-direction:column;gap:2px}
+  .ryhma{display:grid;grid-template-columns:110px minmax(0,1fr) 52px;align-items:center;gap:8px;padding:10px 6px;border-radius:10px;border:0;background:transparent;text-align:left;font-size:14px}
+  .ryhma.valittu{background:#2A2215}
+  .ryhma .palkki{display:flex;align-items:center;gap:6px}
+  .ryhma .palkki span{height:10px;border-radius:5px;display:block}
+  .ryhma .palkki b{font-size:13px}
+  .ryhma .mut{text-align:right;font-size:12px}
+  .ehdotus{border-color:var(--acc);font-size:14px;line-height:1.6}
+  .selitys{margin-top:24px;border-top:1px solid var(--line);padding-top:12px;font-size:14px;color:var(--mut)}
+  .selitys summary{cursor:pointer;padding:6px 0}
+  .selitys p{line-height:1.5}
   [hidden]{display:none!important}
 </style>
 </head>
@@ -101,9 +137,7 @@
 </section>
 
 <!-- DASHBOARD (siirretään seuraavassa vaiheessa) -->
-<section id="dashboard" hidden>
-  <div class="kortti"><b>Tulossa seuraavaksi</b><span class="mut">Dashboard siirretään tähän, kun kirjaus on testattu.</span></div>
-</section>
+<section id="dashboard" hidden></section>
 
 <!-- ASETUKSET -->
 <section id="asetukset" hidden>
@@ -116,6 +150,7 @@
   <p id="asetus-tila" class="tila" hidden></p>
 </section>
 
+<script src="dashboard.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -38,7 +38,7 @@ function parseSarjat(rows) {
   })).filter(r => r.pvm && r.liike);
 }
 function parseLiikkeet(rows) {
-  return rows.slice(1).map(r => ({ liike: r[0], ryhma: r[1] || '' })).filter(r => r.liike);
+  return rows.slice(1).map(r => ({ liike: r[0], ryhma: r[1] || '', malli: r[3] || '' })).filter(r => r.liike);
 }
 
 /* ---------- API ---------- */
@@ -106,7 +106,7 @@ async function tyhjennaJono() {
   } finally {
     lahettaa = false;
     paivitaJonoTila();
-    if (lahti) lataa().then(() => { paivitaValikkoTila(); if (nakyma === 'kirjaa') { naytaPaiva(); numeroi(); } }).catch(() => {});
+    if (lahti) lataa().then(() => { paivitaValikkoTila(); if (nakyma === 'kirjaa') { naytaPaiva(); numeroi(); } if (nakyma === 'dashboard') DB.piirra(); }).catch(() => {});
   }
 }
 
@@ -135,6 +135,7 @@ function nayta(n) {
   $('#otsikko').textContent = OTSIKOT[n] || OTSIKOT[''];
   if (location.hash.slice(1) !== n) history.replaceState(null, '', n ? '#' + n : location.pathname);
   if (n === 'kirjaa') { taytaLiikkeet(); naytaViimeksi(); naytaPaiva(); }
+  if (n === 'dashboard') DB.piirra();
   if (n === 'asetukset') { const a = asetukset(); $('#a-url').value = a.url; $('#a-token').value = a.token; }
   window.scrollTo(0, 0);
 }
@@ -319,7 +320,7 @@ function init() {
 
   if (!asetukset().token) { nayta('asetukset'); return; }
   lataa()
-    .then(() => { paivitaValikkoTila(); if (nakyma === 'kirjaa') { taytaLiikkeet(); naytaViimeksi(); naytaPaiva(); numeroi(); } })
+    .then(() => { paivitaValikkoTila(); if (nakyma === 'kirjaa') { taytaLiikkeet(); naytaViimeksi(); naytaPaiva(); numeroi(); } if (nakyma === 'dashboard') DB.piirra(); })
     .catch(e => { latausVirhe = 'Lataus epäonnistui: ' + (e instanceof TypeError ? 'ei yhteyttä (näytetään tallennettu data)' : e.message); paivitaValikkoTila(); })
     .finally(tyhjennaJono);
 }
