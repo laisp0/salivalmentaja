@@ -125,7 +125,7 @@ function paivitaJonoTila() {
 setInterval(() => { if (jono().length && document.visibilityState === 'visible') tyhjennaJono(); }, 20000);
 
 /* ---------- navigointi ---------- */
-const OTSIKOT = { '': '💪 Salivalmentaja', kirjaa: 'Kirjaa sarjoja', dashboard: 'Dashboard', asetukset: 'Asetukset' };
+const OTSIKOT = { '': '💪 GotGainz', kirjaa: 'Kirjaa sarjoja', dashboard: 'Dashboard', asetukset: 'Asetukset' };
 function nayta(n) {
   nakyma = n;
   $('#valikko').hidden = !!n;

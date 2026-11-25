@@ -1,5 +1,5 @@
 // Salivalmentaja service worker: verkko ensin (ohittaa selaimen välimuistin), puhelimen kopio varalla.
-const CACHE = 'salivalmentaja-v4';
+const CACHE = 'salivalmentaja-v5';
 const SHELL = ['./', 'index.html', 'app.js', 'dashboard.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
